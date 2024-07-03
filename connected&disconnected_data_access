@@ -1,0 +1,100 @@
+1) Connected data based access
+//fetch online data
+
+using MySql.Data.MySqlClient;
+using System.Data;
+
+string connectionString = "Server=localhost;Port=3306;Database=ecommerce;User=root;Password=root123;";
+
+MySqlConnection connection = new MySqlConnection(connectionString);
+
+try
+{
+    connection.Open();
+    string query = "select * from users";
+    MySqlCommand command = connection.CreateCommand();
+    command.CommandText = query;
+
+    MySqlDataReader reader = command.ExecuteReader();
+    while (reader.Read())
+    {
+        int id = reader.GetInt32("user_id");
+        String email = reader.GetString("email");
+        String password = reader.GetString("password");
+        String ContactNumber = reader.GetString("contact_number");
+        Console.WriteLine(id + " " + email + " " + password + " " + ContactNumber + " ");
+    }
+    reader.Close();
+}
+catch(MySqlException e)
+{
+
+}
+finally
+{
+    if(connection.State!=ConnectionState.Closed)
+        connection.Close();
+}
+
+Outout
+1 abc@gmail.com abc 1236547890
+2 efg@gmail.com efg 2144577890
+3 lmn@gmail.com lmn 9546547890
+4 pqr@gmail.com pqr 6468547890
+5 xyz@gmail.com xyz 4196925890
+
+
+
+
+2)disconnected data access
+
+
+using MySql.Data.MySqlClient;
+using System.Data;
+
+string connectionString = "Server=localhost;Port=3306;Database=ecommerce;User=root;Password=root123";
+//disconnected data access
+//open and close connection not used
+///fill fetch offline data
+MySqlConnection connection = new MySqlConnection(connectionString);
+
+MySqlCommand command= connection.CreateCommand();
+
+string query = "select * from users";
+try
+{
+    MySqlCommand mySqlCommand = connection.CreateCommand();
+    mySqlCommand.CommandText = query;
+    MySqlDataAdapter da = new MySqlDataAdapter(mySqlCommand);
+    MySqlCommandBuilder builder = new MySqlCommandBuilder(da);
+    DataSet ds = new DataSet();
+    da.Fill(ds);
+    DataTable dt = ds.Tables[0];
+    DataRowCollection rows = dt.Rows;
+    DataRow theRow = dt.NewRow();
+    theRow["user_id"] = 7;
+    theRow["email"] = "hij@gmail.com";
+    theRow["password"] = "hij";
+    theRow["contact_number"] = "5478963512";
+    rows.Add(theRow);
+    da.Update(ds);
+}
+catch(Exception e)
+{
+    Console.WriteLine(e.Message);
+}
+Console.WriteLine("Data is inserted.....");
+Console.ReadLine();
+
+Output
+Data is inserted.....
++---------+---------------+----------+----------------+
+| user_id | email         | password | contact_number |
++---------+---------------+----------+----------------+
+|       1 | abc@gmail.com | abc      | 1236547890     |
+|       2 | efg@gmail.com | efg      | 2144577890     |
+|       3 | lmn@gmail.com | lmn      | 9546547890     |
+|       4 | pqr@gmail.com | pqr      | 6468547890     |
+|       5 | xyz@gmail.com | xyz      | 4196925890     |
+|       7 | hij@gmail.com | hij      | 5478963512     |
++---------+---------------+----------+----------------+
