@@ -1,0 +1,276 @@
+create daatbase and  table in sql
+create database  userwebapp;
+create table User(
+Id int,
+FirstName varchar(30),
+LastName varchar(30),
+Email varchar(30),
+Password varchar(30),
+ContactNumber varchar(30)
+);
+
+insert into User values(1,"A","B","abc@gmail.com","abc",2365478951);
+insert into User values(2,"C","D","efg@gmail.com","efg",5451541221);
+insert into User values(3,"E","F","jkl@gmail.com","jkl",9875612312);
+insert into User values(4,"G","H","lmn@gmail.com","lmn",9784724324);
+insert into User values(5,"I","J","pqr@gmail.com","pqr",9815623556);
+
+1). Model
+namespace EStoreWebApp.Models
+{
+    public class User
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string ContactNumber { get; set; }
+        
+        public string Password { get; set; }
+
+
+    }
+}
+
+2)Repositories
+
+using EStoreWebApp.Models;
+using System.Data;
+using MySql.Data.MySqlClient;
+
+namespace EStoreWebApp.Repositories
+{
+    public static class UsersRepoManager
+    {
+        public static bool Delete(int id)
+        {
+            bool status = false;
+            //code to delete user
+            return status;
+        }
+
+        public static User GetUser(int id)
+        {
+            User user = null;
+            //code segment
+            return user;
+        }
+
+        public static List<User> GetUsers()
+        {
+            List<User> users = new List<User>();
+            string connectionString = "Server=localhost;Port=3306;Database=ecommerce;User=root;Password=root123;";
+
+            MySqlConnection connection = new MySqlConnection(connectionString);
+            try
+            {
+                connection.Open();
+                string query = "SELECT * FROM users;";
+
+                MySqlCommand command = connection.CreateCommand();
+                command.CommandText = query;
+
+                MySqlDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    int id = reader.GetInt32("user_id");
+                    string email = reader.GetString("email");
+                    string password = reader.GetString("password");
+                    string contactNumber = reader.GetString("contact_number");
+
+                    User user = new User();
+                    user.Id = id;
+                    user.Email = email;
+                    user.Password = password;
+                    user.ContactNumber = contactNumber;
+                    users.Add(user);
+                }
+                reader.Close();
+            }
+            catch (MySqlException e)
+            {
+
+            }
+            finally
+            {
+                if (connection.State != ConnectionState.Closed)
+                    connection.Close();
+            }
+            return users;
+        }
+
+            
+
+        public static bool Insert(User user)
+        {
+
+            return true;
+        }
+
+        public static  bool Update(User user)
+        {
+            return false;
+
+        }
+    }
+}
+
+3). Services 
+   1). IUserService-Interface
+ using EStoreWebApp.Models;
+
+namespace EStoreWebApp.Services
+{
+    public interface IUserService
+    {
+        List<User> GetUsers();
+        User GetUser(int id);
+        bool Insert(User user);
+        bool Update(User user);
+        bool Delete(int id);
+
+
+    }
+}
+
+  2).UserService-Implementation class
+  using EStoreWebApp.Models;
+using EStoreWebApp.Repositories;
+using System.Collections.Generic;
+namespace EStoreWebApp.Services
+{
+    public class UserService : IUserService
+    {
+        public UserService() { 
+
+        }
+        public bool Delete(int id)
+        {
+            bool status = false;
+            //code to delete user
+            return status;
+        }
+
+        public User GetUser(int id)
+        {
+             User user = null;
+            //code segment
+            return user;
+        }
+
+        public List<User> GetUsers()
+        {
+           List<User> users= UsersRepoManager.GetUsers();
+           return users;
+        }
+
+        public bool Insert(User user)
+        {
+
+             return true;
+        }
+
+        public bool Update(User user)
+        {
+            return false;
+             
+        }
+    }
+}
+4). Controller
+
+using EStoreWebApp.Models;
+using EStoreWebApp.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace EStoreWebApp.Controllers
+{
+    public class AuthController : Controller
+    {
+       private IUserService _userService;
+        public AuthController(IUserService userService)
+        {
+            _userService=userService;
+        }
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Login(string email, string password)
+        {
+            if(email =="ravi.tambade@transflower.in" 
+                &&  password == "seed")
+            {
+                return RedirectToAction("index", "products");
+            }
+            return View();
+        }
+
+
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Register(string firstName, string lastName, string contactNumber, string email)
+        {
+
+            User user = new User();
+            user.FirstName = firstName;
+            user.LastName = lastName;
+            user.ContactNumber = contactNumber;
+            user.Email = email;
+            _userService.Insert(user);
+            return View();
+        }
+
+
+        public IActionResult Users()
+        {
+            return Json(_userService.GetUsers());
+        }
+
+
+    }
+}
+
+5).program.cs
+
+using EStoreWebApp.Services;
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container. (IOC)
+builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IUserService, UserService>();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+}
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.Run();
+
+
+
